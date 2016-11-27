@@ -1,3 +1,4 @@
+/*Filter Pago/Não Pago*/
 Vue.filter('doneLabel', function (value) {
     if (value == 0) {
         return "Não Paga"
@@ -5,68 +6,191 @@ Vue.filter('doneLabel', function (value) {
         return "Paga"
     }
 });
+/*total contas a pagar*/
 Vue.filter('statusLabel', function (value) {
     if (value === false) {
         return "Nenhuma conta cadastrada"
     }
-    
-    if (!value){
+
+    if (!value) {
         return "Nenhuma conta a pagar"
     } else {
         return "Existem " + value + " conta(s) a ser(em) paga(s)"
     }
-    
-    
 });
-var app = new Vue({
-    el: "#appVue",
-    data: {
-        title: "Controle de Contas a pagar",
-        activedView: 0,
-        menus: [
-            {id: 0, name: "Listar Contas"},
-            {id: 1, name: "Criar Conta"}
-        ],
-        names: [
-            'Conta de Luz',
-            'Conta de Água',
-            'Conta de Telefone',
-            'Supermercado',
-            'Conta de Água',
-            'Empréstimo',
-            'Gasolina'
-        ],
-        formType: 'insert',
-        bill: {
-            date_due: "",
-            name: "",
-            value: 0,
-            done: 0
-        },
-        bills: [
-            {date_due: "25/11/2016", name: "Conta de Luz", value: 25.99, done: 1},
-            {date_due: "25/11/2016", name: "Conta de Água", value: 220.99, done: 0},
-            {date_due: "25/11/2016", name: "Gasolina", value: 425.99, done: 0},
-            {date_due: "25/11/2016", name: "Gasolina", value: 33.49, done: 0},
-            {date_due: "25/11/2016", name: "Empréstimo", value: 28.99, done: 0},
-            {date_due: "25/11/2016", name: "Conta de Água", value: 125.99, done: 0},
-            {date_due: "25/11/2016", name: "Conta de Telefone", value: 125.99, done: 0}
-        ]
-    },
+/*WebComponent*/
+var appComponent = Vue.extend({
+    template:
+            `
+     <!-- Fixed navbar -->
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Curso Vue.js</a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a href="index.html">Home</a></li>
+                        <li v-for="o in menus">
+                            <a href="#" @click.prevent="showView(o.id)">{{o.name}}</a>
+                        </li>
+                    </ul>                   
+                </div><!--/.nav-collapse -->
+            </div>
+        </nav>
+
+
+        <div class="container">
+
+            <!-- Main component for a primary marketing message or call to action -->
+            <div class="jumbotron">
+                <h2>{{title}}</h2>
+
+                <!-- Listagem -->
+                <div v-if="activedView == 0">
+                    <div class="panel panel-default">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading">
+                            <img src="imgs/payment-method.png" />
+                            Listagem das Contas a Pagar                            
+                        </div>
+                        <div class="panel-body">
+                            <!-- Alert -->
+                            <div class="alert alert-dismissible" role="alert" :class="{'cinza' : status === false, 'alert-success': status === 0, 'alert-danger': status > 0 }">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                {{status | statusLabel}}
+                            </div>                            
+                            <!-- /Alert -->
+
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>vencimento</th>
+                                        <th>Nome</th>
+                                        <th>Valor</th>
+                                        <th>Paga?</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(index, o) in bills" :class="{'success' : o.done, 'warning':!o.done }">
+                                        <th>{{index + 1}}</th>
+                                        <td>{{o.date_due}}</td>
+                                        <td>{{o.name}}</td>
+                                        <td align="right">{{o.value | currency 'R$ ' 2}}</td>
+                                        <td align="right" class='bg' :class="{'pago' : o.done, 'naoPago':!o.done }">
+                                            {{o.done | doneLabel}}
+                                    </td>
+                                    <td>
+                                        <a href="#" @click.prevent="loadBill(o)">Editar</a> | <a href="#" @click.prevent="deleteBill(o)">Excluir</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- /Listagem -->
+
+            <!-- Cadastro -->
+            <div v-if="activedView == 1">
+                <div class="panel panel-default">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">
+                        <img src="imgs/check.png" />
+                        Criação/Alteração de Conta a Pagar                            
+                    </div>
+                    <div class="panel-body">
+                        <form name="form" @submit.prevent="submit">
+                            <div class="form-group">
+                                <label>Vencimento:</label>
+                                <input type="text" v-model="bill.date_due"/>
+                            </div>
+                            <div class="form-group">                            
+                                <label>Nome:</label>
+                                <select v-model="bill.name">
+                                    <option v-for="o in names" :value="o">{{o}}</option>
+                                </select>
+                            </div>
+                            <br/><br/>
+                            <label>Valor:</label>
+                            <input type="text" v-model="bill.value"/>
+                            <br/><br/>  
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" v-model="bill.done"> Marcar conta como Paga
+                                </label>
+                            </div>
+                            <input type="submit" value="Enviar"/>
+                        </form>     
+                    </div>
+                </div>
+            </div>
+            <!-- /Cadastro -->                
+        </div>        
+
+    </div> <!-- /container -->
+ `,
+    data: function () {
+        return {
+            title: "Controle de Contas a pagar",
+            activedView: 0,
+            menus: [
+                {id: 0, name: "Listar Contas"},
+                {id: 1, name: "Criar Conta"}
+            ],
+            names: [
+                'Conta de Luz',
+                'Conta de Água',
+                'Conta de Telefone',
+                'Supermercado',
+                'Conta de Água',
+                'Empréstimo',
+                'Gasolina'
+            ],
+            formType: 'insert',
+            bill: {
+                date_due: "",
+                name: "",
+                value: 0,
+                done: 0
+            },
+            bills: [
+                {date_due: "25/11/2016", name: "Conta de Luz", value: 25.99, done: 1},
+                {date_due: "25/11/2016", name: "Conta de Água", value: 220.99, done: 0},
+                {date_due: "25/11/2016", name: "Gasolina", value: 425.99, done: 0},
+                {date_due: "25/11/2016", name: "Gasolina", value: 33.49, done: 0},
+                {date_due: "25/11/2016", name: "Empréstimo", value: 28.99, done: 0},
+                {date_due: "25/11/2016", name: "Conta de Água", value: 125.99, done: 0},
+                {date_due: "25/11/2016", name: "Conta de Telefone", value: 125.99, done: 0}
+            ]
+        }
+    }
+    ,
     computed: {
-        status: function(){
-            if(!this.bills.length){
+        status: function () {
+            if (!this.bills.length) {
                 return false;
             }
             var count = 0;
             for (var i in this.bills) {
-                if(!this.bills[i].done){
+                if (!this.bills[i].done) {
                     count++;
                 }
             }
             return count;
-        } 
-    },
+        }
+    }
+    ,
     methods: {
         showView: function (id) {
             this.activedView = id;
@@ -79,7 +203,6 @@ var app = new Vue({
                 this.bills.push(this.bill);
             }
             ;
-
             this.bill = {
                 date_due: "",
                 name: "",
@@ -88,21 +211,25 @@ var app = new Vue({
             }
 
             this.activedView = 0;
-
-        },
+        }
+        ,
         loadBill: function (bill) {
             this.bill = bill;
             this.activedView = 1;
             this.formType = 'update';
-        },
+        }
+        ,
         deleteBill: function (o) {
             if (confirm('Deseja Excluir esta conta?')) {
                 this.bills.$remove(o);
             }
-
-
         }
     }
 });
-
-
+/*registro Componente*/
+Vue.component('app-component', appComponent);
+/*Aplicação Vue.js*/
+var app = new Vue({
+    el: "#appVue",
+});
+        
