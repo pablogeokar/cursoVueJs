@@ -13,14 +13,17 @@
             .naoPago{
                 color:red;
             }
-            .bg{
+            .cinza{
+                color: gray;
+            }
+            body{
                 background-color: #16a085;
                 background-image: url('imgs/logo-vueJs.png');
             }
         </style>
 
     </head>
-    <body class="bg" id="appVue">
+    <body id="appVue">
 
         <!-- Fixed navbar -->
         <nav class="navbar navbar-default navbar-fixed-top">
@@ -61,6 +64,15 @@
                             Listagem das Contas a Pagar                            
                         </div>
                         <div class="panel-body">
+                            <!-- Alert -->
+                            <div class="alert alert-dismissible" role="alert" :class="{'cinza' : status === false, 'alert-success': status === 0, 'alert-danger': status > 0 }">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                {{status | statusLabel}}
+                            </div>                            
+                            <!-- /Alert -->
+
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
@@ -82,7 +94,7 @@
                                             {{o.done | doneLabel}}
                                     </td>
                                     <td>
-                                        <a href="#" @click.prevent="loadBill(o)">Editar</a>
+                                        <a href="#" @click.prevent="loadBill(o)">Editar</a> | <a href="#" @click.prevent="deleteBill(o)">Excluir</a>
                                     </td>
                                 </tr>
                             </tbody>
@@ -118,7 +130,7 @@
                             <br/><br/>  
                             <div class="checkbox">
                                 <label>
-                                    <input type="checkbox"> Marcar conta como Paga
+                                    <input type="checkbox" v-model="bill.done"> Marcar conta como Paga
                                 </label>
                             </div>
                             <input type="submit" value="Enviar"/>
