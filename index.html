@@ -6,9 +6,21 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Bootstrap -->
         <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <style type="text/css">
+            .pago{
+                color:green;
+            }
+            .naoPago{
+                color:red;
+            }
+            .bg{
+                background-color: #16a085;
+                background-image: url('imgs/logo-vueJs.png');
+            }
+        </style>
 
     </head>
-    <body id="appVue">
+    <body class="bg" id="appVue">
 
         <!-- Fixed navbar -->
         <nav class="navbar navbar-default navbar-fixed-top">
@@ -26,7 +38,7 @@
                     <ul class="nav navbar-nav">
                         <li class="active"><a href="index.html">Home</a></li>
                         <li v-for="o in menus">
-                            <a href="#" @click="showView(o.id)">{{o.name}}</a>
+                            <a href="#" @click.prevent="showView(o.id)">{{o.name}}</a>
                         </li>
                     </ul>                   
                 </div><!--/.nav-collapse -->
@@ -38,29 +50,92 @@
 
             <!-- Main component for a primary marketing message or call to action -->
             <div class="jumbotron">
-                <h1>{{title}}</h1>
-                
+                <h2>{{title}}</h2>
+
                 <!-- Listagem -->
                 <div v-if="activedView == 0">
-                    <p>Listagem das contas a Pagar</p>
+                    <div class="panel panel-default">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading">
+                            <img src="imgs/payment-method.png" />
+                            Listagem das Contas a Pagar                            
+                        </div>
+                        <div class="panel-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>vencimento</th>
+                                        <th>Nome</th>
+                                        <th>Valor</th>
+                                        <th>Paga?</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(index, o) in bills" :class="{'success' : o.done, 'warning':!o.done }">
+                                        <th>{{index + 1}}</th>
+                                        <td>{{o.date_due}}</td>
+                                        <td>{{o.name}}</td>
+                                        <td align="right">{{o.value | currency 'R$ ' 2}}</td>
+                                        <td align="right" class='bg' :class="{'pago' : o.done, 'naoPago':!o.done }">
+                                            {{o.done | doneLabel}}
+                                    </td>
+                                    <td>
+                                        <a href="#" @click.prevent="loadBill(o)">Editar</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                 <!-- /Listagem -->
-                 
-                 <!-- Cadastro -->
-                <div v-if="activedView == 1">
-                    <p>Inclusão de Nova Conta a Pagar </p>
-                </div>
-                 <!-- /Cadastro -->                
-                 
             </div>
+            <!-- /Listagem -->
 
-        </div> <!-- /container -->
+            <!-- Cadastro -->
+            <div v-if="activedView == 1">
+                <div class="panel panel-default">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">
+                        <img src="imgs/check.png" />
+                        Criação/Alteração de Conta a Pagar                            
+                    </div>
+                    <div class="panel-body">
+                        <form name="form" @submit.prevent="submit">
+                            <div class="form-group">
+                                <label>Vencimento:</label>
+                                <input type="text" v-model="bill.date_due"/>
+                            </div>
+                            <div class="form-group">                            
+                                <label>Nome:</label>
+                                <select v-model="bill.name">
+                                    <option v-for="o in names" :value="o">{{o}}</option>
+                                </select>
+                            </div>
+                            <br/><br/>
+                            <label>Valor:</label>
+                            <input type="text" v-model="bill.value"/>
+                            <br/><br/>  
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"> Marcar conta como Paga
+                                </label>
+                            </div>
+                            <input type="submit" value="Enviar"/>
+                        </form>     
+                    </div>
+                </div>
+            </div>
+            <!-- /Cadastro -->                
+        </div>        
 
-        <!-- Scripts -->        
-        <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
-        <script type="text/javascript" src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="node_modules/vue/dist/vue.min.js"></script>
-        <script type="text/javascript" src="app.js"></script>
+    </div> <!-- /container -->
 
-    </body>
+    <!-- Scripts -->        
+    <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="node_modules/vue/dist/vue.min.js"></script>
+    <script type="text/javascript" src="app.js"></script>
+
+</body>
 </html>
