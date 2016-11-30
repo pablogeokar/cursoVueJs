@@ -19,41 +19,54 @@ Vue.filter('statusLabel', function (value) {
     }
 });
 /*WebComponent*/
-var appComponent = Vue.extend({
-    template:
-            `
-     <!-- Fixed navbar -->
-        <nav class="navbar navbar-default navbar-fixed-top">
-            <div class="container">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="#">Curso Vue.js</a>
-                </div>
-                <div id="navbar" class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav">
-                        <li class="active"><a href="index.html">Home</a></li>
-                        <li v-for="o in menus">
-                            <a href="#" @click.prevent="showView(o.id)">{{o.name}}</a>
-                        </li>
-                    </ul>                   
-                </div><!--/.nav-collapse -->
-            </div>
-        </nav>
+var menuComponent = Vue.extend({
+    template: `
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Curso Vue.js</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="index.html">Home</a></li>
+                <li v-for="o in menus">
+                    <a href="#" @click.prevent="showView(o.id)">{{o.name}}</a>
+                </li>
+            </ul>                   
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+`,
+    data: function () {
+        return {
+            menus: [
+                {id: 0, name: "Listar Contas"},
+                {id: 1, name: "Criar Conta"}
+            ],
+        };
+    },
+    methods: {
+        showView: function (id) {
+            this.$parent.activedView = id;
+            if (id == 1) {
+                this.$parent.formType = 'insert';
+            }
+        },
+    }
+
+});
 
 
-        <div class="container">
-
-            <!-- Main component for a primary marketing message or call to action -->
-            <div class="jumbotron">
-                <h2>{{title}}</h2>
-
-                <!-- Listagem -->
-                <div v-if="activedView == 0">
+var billListComponent = Vue.extend({
+    template: `
                     <div class="panel panel-default">
                         <!-- Default panel contents -->
                         <div class="panel-heading">
@@ -62,11 +75,11 @@ var appComponent = Vue.extend({
                         </div>
                         <div class="panel-body">
                             <!-- Alert -->
-                            <div class="alert alert-dismissible" role="alert" :class="{'cinza' : status === false, 'alert-success': status === 0, 'alert-danger': status > 0 }">
+                            <div class="alert alert-dismissible" role="alert" :class="{'cinza' : $parent.status === false, 'alert-success': $parent.status === 0, 'alert-danger': $parent.status > 0 }">
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
-                                {{status | statusLabel}}
+                                {{$parent.status | statusLabel}}
                             </div>                            
                             <!-- /Alert -->
 
@@ -97,13 +110,43 @@ var appComponent = Vue.extend({
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
+                </div>          
             <!-- /Listagem -->
 
-            <!-- Cadastro -->
-            <div v-if="activedView == 1">
-                <div class="panel panel-default">
+`,
+    data: function () {
+        return {
+            bills: [
+                {date_due: "25/11/2016", name: "Conta de Luz", value: 25.99, done: 1},
+                {date_due: "25/11/2016", name: "Conta de Água", value: 220.99, done: 0},
+                {date_due: "25/11/2016", name: "Gasolina", value: 425.99, done: 0},
+                {date_due: "25/11/2016", name: "Gasolina", value: 33.49, done: 0},
+                {date_due: "25/11/2016", name: "Empréstimo", value: 28.99, done: 0},
+                {date_due: "25/11/2016", name: "Conta de Água", value: 125.99, done: 0},
+                {date_due: "25/11/2016", name: "Conta de Telefone", value: 125.99, done: 0}
+            ]
+        }
+    },
+    methods: {
+        loadBill: function (bill) {
+            this.$parent.bill = bill;
+            this.$parent.activedView = 1;
+            this.$parent.formType = 'update';
+        }
+        ,
+        deleteBill: function (o) {
+            if (confirm('Deseja Excluir esta conta?')) {
+                this.bills.$remove(o);
+            }
+        }
+    }
+
+});
+
+
+var billCreateComponent = Vue.extend({
+    template: `
+   <div class="panel panel-default">
                     <!-- Default panel contents -->
                     <div class="panel-heading">
                         <img src="imgs/check.png" />
@@ -134,6 +177,81 @@ var appComponent = Vue.extend({
                         </form>     
                     </div>
                 </div>
+`,
+    props: ['bill', 'formType'],
+    data: function () {
+        return {
+            names: [
+                'Conta de Luz',
+                'Conta de Água',
+                'Conta de Telefone',
+                'Supermercado',
+                'Conta de Água',
+                'Empréstimo',
+                'Gasolina'
+            ],
+        }
+    },
+    methods: {
+        submit: function () {
+            if (this.formType == 'insert') {
+                // this.$parent.$children[1].bills.push(this.bill);
+                this.$parent.$refs.billList.bills.push(this.bill);
+            }
+            ;
+            this.bill = {
+                date_due: "",
+                name: "",
+                value: 0,
+                done: 0
+            }
+
+            this.$parent.activedView = 0;
+        }
+    }
+});
+
+
+var appComponent = Vue.extend({
+    components: {
+        'menu-component': menuComponent,
+        'bill-list-component': billListComponent,
+        'bill-create-component': billCreateComponent
+    },
+    template:
+            `
+    <style type="text/css">
+            .pago{
+                color:green;
+            }
+            .naoPago{
+                color:red;
+            }
+            .cinza{
+                color: gray;
+            }
+            body{
+                background-color: #16a085;
+                background-image: url('imgs/logo-vueJs.png');
+            }
+        </style>
+     <menu-component></menu-component>
+     
+        <div class="container">
+
+            <!-- Main component for a primary marketing message or call to action -->
+            <div class="jumbotron">
+                <h2>{{title}}</h2>
+                
+                <!-- Listagem -->
+                <div v-show="activedView == 0">    
+                <bill-list-component v-ref:bill-list></bill-list-component>
+                <!-- /Listagem -->
+                </div>
+                
+            <!-- Cadastro -->
+            <div v-show="activedView == 1">
+                <bill-create-component v-bind:bill.sync="bill" v-bind:form-type="formType"></bill-create-component>
             </div>
             <!-- /Cadastro -->                
         </div>        
@@ -148,42 +266,27 @@ var appComponent = Vue.extend({
                 {id: 0, name: "Listar Contas"},
                 {id: 1, name: "Criar Conta"}
             ],
-            names: [
-                'Conta de Luz',
-                'Conta de Água',
-                'Conta de Telefone',
-                'Supermercado',
-                'Conta de Água',
-                'Empréstimo',
-                'Gasolina'
-            ],
             formType: 'insert',
             bill: {
                 date_due: "",
                 name: "",
                 value: 0,
                 done: 0
-            },
-            bills: [
-                {date_due: "25/11/2016", name: "Conta de Luz", value: 25.99, done: 1},
-                {date_due: "25/11/2016", name: "Conta de Água", value: 220.99, done: 0},
-                {date_due: "25/11/2016", name: "Gasolina", value: 425.99, done: 0},
-                {date_due: "25/11/2016", name: "Gasolina", value: 33.49, done: 0},
-                {date_due: "25/11/2016", name: "Empréstimo", value: 28.99, done: 0},
-                {date_due: "25/11/2016", name: "Conta de Água", value: 125.99, done: 0},
-                {date_due: "25/11/2016", name: "Conta de Telefone", value: 125.99, done: 0}
-            ]
+            }
+
         }
     }
     ,
     computed: {
         status: function () {
-            if (!this.bills.length) {
+            var billList = this.$refs.billList;
+            //if (!billList.bills.length) {
+            if (!this.$refs.billList.bills.length) {
                 return false;
             }
             var count = 0;
-            for (var i in this.bills) {
-                if (!this.bills[i].done) {
+            for (var i in billList.bills) {
+                if (!billList.bills[i].done) {
                     count++;
                 }
             }
@@ -192,38 +295,7 @@ var appComponent = Vue.extend({
     }
     ,
     methods: {
-        showView: function (id) {
-            this.activedView = id;
-            if (id == 1) {
-                this.formType = 'insert';
-            }
-        },
-        submit: function () {
-            if (this.formType == 'insert') {
-                this.bills.push(this.bill);
-            }
-            ;
-            this.bill = {
-                date_due: "",
-                name: "",
-                value: 0,
-                done: 0
-            }
 
-            this.activedView = 0;
-        }
-        ,
-        loadBill: function (bill) {
-            this.bill = bill;
-            this.activedView = 1;
-            this.formType = 'update';
-        }
-        ,
-        deleteBill: function (o) {
-            if (confirm('Deseja Excluir esta conta?')) {
-                this.bills.$remove(o);
-            }
-        }
     }
 });
 /*registro Componente*/
@@ -232,4 +304,3 @@ Vue.component('app-component', appComponent);
 var app = new Vue({
     el: "#appVue",
 });
-        
