@@ -55,9 +55,11 @@ var menuComponent = Vue.extend({
     },
     methods: {
         showView: function (id) {
-            this.$parent.activedView = id;
+            //this.$parent.activedView = id;
+            this.$dispatch('change-activedView', id);
             if (id == 1) {
-                this.$parent.formType = 'insert';
+                //this.$parent.formType = 'insert';
+                this.$dispatch('change-formType', 'insert');
             }
         },
     }
@@ -294,8 +296,14 @@ var appComponent = Vue.extend({
         }
     }
     ,
-    methods: {
-
+    methods: {},
+    events:{
+        'change-activedView' : function(activedView){
+            this.activedView = activedView;
+        },
+        'change-formType' : function(formType){
+            this.formType = formType;
+        }
     }
 });
 /*registro Componente*/
