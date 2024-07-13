@@ -10,7 +10,7 @@
   "license": "ISC",
     "dependencies": {
     "vue": "^2.5.17",
-    "bootstrap": "3",
+    "bootstrap": "5.0.0",
     "jquery": "^3.5.0"        
   }
 }
